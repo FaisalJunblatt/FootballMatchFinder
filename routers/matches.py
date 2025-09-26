@@ -30,3 +30,13 @@ def join_math(match_id: int, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(match)
     return match
+
+
+@router.delete("/{match_id}", status_code=204) 
+def delete_match(mathc_id:int, session: Session = Depends(get_session)):
+    match=session.get(Match,mathc_id)
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    session.delete(match)
+    session.commit()
+    
