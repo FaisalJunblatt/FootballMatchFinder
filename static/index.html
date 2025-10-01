@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Football Match Finder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin: 0 0 12px; }
+    form, .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    input { padding: 8px; margin: 4px 6px 4px 0; }
+    button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .muted { color: #666; font-size: 14px; }
+    .grid { display: grid; gap: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Football Match Finder</h1>
+  <p class="muted">Create a match, then join or delete it. (All data is stored in SQLite.)</p>
+
+  
+  <form id="create-form">
+    <div class="row">
+      <input id="date" placeholder="Date (YYYY-MM-DD)" required />
+      <input id="time" placeholder="Time (HH:MM)" required />
+      <input id="location" placeholder="Location" required />
+      <input id="max_players" type="number" min="1" placeholder="Max players" required />
+    </div>
+    <button type="submit">Create Match</button>
+  </form>
+
+  <h2>Matches</h2>
+  <div id="matches" class="grid"></div>
+
+  <script>
+    async function fetchMatches() {
+      const res = await fetch('/matches');
+      const data = await res.json();
+      renderMatches(data);
+    }
+
+    function renderMatches(matches) {
+      const box = document.getElementById('matches');
+      box.innerHTML = '';
+      if (!matches.length) {
+        box.innerHTML = '<p class="muted">No matches yet. Create one above.</p>';
+        return;
+      }
+      for (const m of matches) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <strong>#${m.id}</strong> — ${m.date} @ ${m.time} — ${m.location}<br/>
+          <span class="muted">${m.joined_players} / ${m.max_players} players</span><br/><br/>
+          <div class="row">
+            <button onclick="joinMatch(${m.id})">Join</button>
+            <button onclick="leaveMatch(${m.id})">Leave</button>
+            ${canDelete ? '<button onclick="deleteMatch(${m.id})">Delete</button>' : ''}
+            
+            
+          </div>
+        `;
+        box.appendChild(div);
+      }
+    }
+
+    async function joinMatch(id) {
+      const res = await fetch(`/matches/${id}/join`, { method: 'PUT' });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:'Unknown error'}));
+        alert(err.detail || 'Failed to join');
+      }
+      fetchMatches();
+    }
+
+    async function leaveMatch(id) {
+      const res = await api(`/matches/${id}/leave`, { method: 'PUT' });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:'Unknown error'}));
+        alert(err.detail || 'Failed to leave');
+      }
+      fetchMatches();
+    }
+
+    async function deleteMatch(id) {
+      const ok = confirm('Delete this match?');
+      if (!ok) return;
+      const res = await fetch(`/matches/${id}`, { method: 'DELETE' });
+      if (!res.ok && res.status !== 204) {
+        const err = await res.json().catch(()=>({detail:'Unknown error'}));
+        alert(err.detail || 'Failed to delete');
+      }
+      fetchMatches();
+    }
+
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        date: document.getElementById('date').value.trim(),
+        time: document.getElementById('time').value.trim(),
+        location: document.getElementById('location').value.trim(),
+        max_players: parseInt(document.getElementById('max_players').value, 10),
+        joined_players: 0
+      };
+      const res = await fetch('/matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:'Unknown error'}));
+        alert(err.detail || 'Failed to create match');
+      } else {
+        
+        document.getElementById('date').value = '';
+        document.getElementById('time').value = '';
+        document.getElementById('location').value = '';
+        document.getElementById('max_players').value = '';
+      }
+      fetchMatches();
+    });
+
+    
+    fetchMatches();
+  </script>
+</body>
+</html>

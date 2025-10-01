@@ -1,13 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Request
 from sqlmodel import Session, select
 from db import get_session
-from models import Match, MatchCreate, MatchRead
+from models import Match, MatchCreate, MatchRead, MatchParticipant
+
+
+
+def require_identity(request: Request):
+    user_id = request.headers.get("X-User-Id")
+    first_name = request.headers.get("X-User-First-Name")
+    last_name = request.headers.get("X-User-Last-Name")
+    if not user_id or not first_name or not last_name:
+        raise HTTPException(status_code=401, detail="Missing user identity headers")
+    return user_id, first_name, last_name
+
 
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
 @router.post("", response_model=MatchRead, status_code=201)
-def create_match(payload: MatchCreate, session: Session = Depends(get_session)):
+def create_match(payload: MatchCreate, request: Request, session: Session = Depends(get_session)):
     m = Match(**payload.model_dump())
     session.add(m)
     session.commit()
