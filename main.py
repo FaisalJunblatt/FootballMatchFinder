@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from db import init_db
+from db import create_db_and_tables
 from routers.matches import router as matches_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -12,7 +12,7 @@ def health():
 
 @app.on_event("startup")
 def on_startup():
-    init_db()
+    create_db_and_tables()
 
 
 app.include_router(matches_router)
@@ -24,7 +24,4 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def root():
     return FileResponse("static/index.html")
 
-organizer_user_id = str
-organizer_first_name = str
-organizer_last_name = str
 
