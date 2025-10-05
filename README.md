@@ -43,11 +43,18 @@ So the Football Match Finder solves this problem as i made this simple app that 
 - Database: SQLite (SQLModel)
 - Frontend: HTML, CSS, JavaScript
 
+## Tests
+- pip install pytest pytest-cov
+- pytest
+- pytest --cov=. --cov-report=term-missing
+
+
 ## Quickstart
  ```bash
 python3 -m venv .venv # creates vm
 source .venv/bin/activate # activates vm
 pip install -r requirements.txt # install everything this app needs 
 uvicorn main:app --reload # use to run the app 
+
 
 

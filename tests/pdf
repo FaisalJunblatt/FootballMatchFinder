@@ -1,0 +1,38 @@
+import os
+
+# Project root (change if needed)
+PROJECT_ROOT = "."
+
+# Output file
+OUTPUT_FILE = "codebase.md"
+
+# Extensions to include
+INCLUDE_EXTS = (".py", ".html", ".css", ".js")
+
+with open(OUTPUT_FILE, "w", encoding="utf-8") as out:
+    out.write("# Project Codebase\n\n")
+    for root, dirs, files in os.walk(PROJECT_ROOT):
+        # Skip virtual envs or hidden folders
+        if any(skip in root for skip in [".git", "_pycache_", ".venv", "node_modules"]):
+            continue
+
+        # Write folder name
+        rel_path = os.path.relpath(root, PROJECT_ROOT)
+        if rel_path == ".":
+            rel_path = "Root"
+        out.write(f"\n\n## 📂 {rel_path}\n\n")
+
+        for file in sorted(files):
+            if file.endswith(INCLUDE_EXTS):
+                filepath = os.path.join(root, file)
+                out.write(f"\n### 📄 {file}\n\n")
+                out.write("" + filepath.split(".")[-1] + "\n")  # syntax highlight
+                try:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        out.write(f.read())
+                except Exception as e:
+                    out.write(f"⚠️ Could not read file: {e}")
+                out.write("\n\n")
+
+print(f"✅ Codebase exported to {OUTPUT_FILE}. Now run:")
+print("   pandoc codebase.md -o codebase.pdf   # convert to PDF")

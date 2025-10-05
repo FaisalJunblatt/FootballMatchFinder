@@ -7,7 +7,7 @@ from models import Match, MatchCreate, MatchRead, MatchParticipant
 
 def require_identity(request: Request):
     user_id = request.headers.get("X-User-Id")
-    # Accept both header variants from the client
+    
     first_name = request.headers.get("X-First-Name") or request.headers.get("X-User-First-Name")
     last_name = request.headers.get("X-Last-Name") or request.headers.get("X-User-Last-Name")
     if not user_id or not first_name or not last_name:
@@ -68,7 +68,7 @@ def delete_match(match_id:int, request: Request, session: Session = Depends(get_
     match=session.get(Match,match_id)
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
-    # Only organizer can delete, and only if 0 joined players
+    
     if match.organizer_user_id != user_id:
         raise HTTPException(status_code=403, detail="Only the organizer can delete this match")
     if match.joined_players != 0:
