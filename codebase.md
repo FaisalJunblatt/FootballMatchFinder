@@ -49,9 +49,12 @@ So the Football Match Finder solves this problem as i made this simple app that 
 - Frontend: HTML, CSS, JavaScript
 
 ## Tests
+- .venv/bin/python3 -m pytest
 - pip install pytest pytest-cov
 - pytest
-- pytest --cov=. --cov-report=term-missing
+- --cov=. 
+- --cov-report=term-missing 
+- --cov-report=html
 
 
 ## Quickstart
