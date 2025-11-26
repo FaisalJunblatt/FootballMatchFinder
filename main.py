@@ -3,12 +3,16 @@ from db import create_db_and_tables
 from routers.matches import router as matches_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(title="Football Match Finder")
-@app.get("/health") 
+Instrumentator().instrument(app).expose(app)
+
+
+@app.get("/health")
 def health():
-    return {"status":"ok"}
+    return {"status": "ok"}
+
 
 @app.on_event("startup")
 def on_startup():
@@ -17,11 +21,9 @@ def on_startup():
 
 app.include_router(matches_router)
 
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/")
 def root():
     return FileResponse("static/index.html")
-
-
