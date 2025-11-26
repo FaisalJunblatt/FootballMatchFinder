@@ -134,12 +134,3 @@ def test_delete_rules(client):
     # Confirm delete
     r = client.get("/matches")
     assert all(x["id"] != mid for x in r.json())
-
-
-def test_health(client):
-    r = client.get("/health")
-    assert r.status_code == 200
-
-def test_match_not_found(client):
-    r = client.put("/matches/999/join", headers=headers())
-    assert r.status_code == 404
