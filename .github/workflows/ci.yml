@@ -24,6 +24,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-xdist pytest-html
+          pip install black flake8 bandit safety
+
+      - name: Check code formatting with Black
+        run: |
+          black --check --diff .
+
+      - name: Check code style with Flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+      - name: Security scan with Bandit
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . --severity-level medium
+
+      - name: Check for known security vulnerabilities
+        run: |
+          safety check --json --output safety-report.json || true
+          safety check
 
       - name: Run unit tests
         run: |
