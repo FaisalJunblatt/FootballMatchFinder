@@ -11,9 +11,9 @@ def test_match_base_validation():
         "date": date(2025, 12, 1),
         "time": time(18, 0),
         "location": "Central Park",
-        "max_players": 10
+        "max_players": 10,
     }
-    
+
     match_create = MatchCreate(**match_data)
     assert match_create.date == date(2025, 12, 1)
     assert match_create.time == time(18, 0)
@@ -31,9 +31,9 @@ def test_match_model_creation():
         max_players=10,
         organizer_user_id="user123",
         organizer_first_name="John",
-        organizer_last_name="Doe"
+        organizer_last_name="Doe",
     )
-    
+
     assert match.organizer_user_id == "user123"
     assert match.organizer_first_name == "John"
     assert match.organizer_last_name == "Doe"
@@ -50,9 +50,9 @@ def test_match_read_serialization():
         "joined_players": 3,
         "organizer_user_id": "user123",
         "organizer_first_name": "John",
-        "organizer_last_name": "Doe"
+        "organizer_last_name": "Doe",
     }
-    
+
     match_read = MatchRead(**match_data)
     assert match_read.id == 1
     assert match_read.joined_players == 3
@@ -61,12 +61,9 @@ def test_match_read_serialization():
 def test_match_participant_model():
     """Test match participant model"""
     participant = MatchParticipant(
-        match_id=1,
-        user_id="user456",
-        first_name="Jane",
-        last_name="Smith"
+        match_id=1, user_id="user456", first_name="Jane", last_name="Smith"
     )
-    
+
     assert participant.match_id == 1
     assert participant.user_id == "user456"
     assert participant.first_name == "Jane"
@@ -83,31 +80,28 @@ def test_match_participant_unique_constraint(session):
         max_players=10,
         organizer_user_id="org1",
         organizer_first_name="Organizer",
-        organizer_last_name="One"
+        organizer_last_name="One",
     )
     session.add(match)
     session.commit()
     session.refresh(match)
-    
+
     # Add first participant
     participant1 = MatchParticipant(
-        match_id=match.id,
-        user_id="user1",
-        first_name="John",
-        last_name="Doe"
+        match_id=match.id, user_id="user1", first_name="John", last_name="Doe"
     )
     session.add(participant1)
     session.commit()
-    
+
     # Try to add the same user again - should fail
     participant2 = MatchParticipant(
         match_id=match.id,
         user_id="user1",  # Same user
         first_name="John",
-        last_name="Doe"
+        last_name="Doe",
     )
     session.add(participant2)
-    
+
     with pytest.raises(IntegrityError):
         session.commit()
 
@@ -118,11 +112,11 @@ def test_match_default_values():
         date=date(2025, 12, 1),
         time=time(18, 0),
         location="Test Location",
-        max_players=10
+        max_players=10,
     )
-    
+
     assert match_create.joined_players == 0
-    
+
     match = Match(
         date=date(2025, 12, 1),
         time=time(18, 0),
@@ -130,8 +124,8 @@ def test_match_default_values():
         max_players=10,
         organizer_user_id="user123",
         organizer_first_name="John",
-        organizer_last_name="Doe"
+        organizer_last_name="Doe",
     )
-    
+
     assert match.joined_players == 0
     assert match.id is None  # Should be None before saving

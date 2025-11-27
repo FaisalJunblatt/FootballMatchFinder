@@ -5,7 +5,7 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from db import get_session
-import models  
+import models
 from conftest import headers
 
 
@@ -19,7 +19,12 @@ def test_list_empty(client):
 
 
 def test_create_and_list(client):
-    payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Retiro", "max_players": 10}
+    payload = {
+        "date": "2025-10-04",
+        "time": "18:00:00",
+        "location": "Retiro",
+        "max_players": 10,
+    }
     r = client.post("/matches", json=payload, headers=headers("org1", "Alice", "Org"))
     assert r.status_code == 201
     m = r.json()
@@ -34,14 +39,24 @@ def test_create_and_list(client):
 
 
 def test_missing_identity_headers(client):
-    payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Retiro", "max_players": 10}
-    r = client.post("/matches", json=payload) 
+    payload = {
+        "date": "2025-10-04",
+        "time": "18:00:00",
+        "location": "Retiro",
+        "max_players": 10,
+    }
+    r = client.post("/matches", json=payload)
     assert r.status_code == 401
     assert r.json()["detail"] == "Missing user identity headers"
 
 
 def test_join_leave_flow(client):
-    payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Retiro", "max_players": 3}
+    payload = {
+        "date": "2025-10-04",
+        "time": "18:00:00",
+        "location": "Retiro",
+        "max_players": 3,
+    }
     m = client.post("/matches", json=payload, headers=headers("org1")).json()
     mid = m["id"]
 
@@ -67,7 +82,12 @@ def test_join_leave_flow(client):
 
 
 def test_match_full(client):
-    payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Retiro", "max_players": 1}
+    payload = {
+        "date": "2025-10-04",
+        "time": "18:00:00",
+        "location": "Retiro",
+        "max_players": 1,
+    }
     m = client.post("/matches", json=payload, headers=headers("org1")).json()
     mid = m["id"]
 
@@ -79,8 +99,15 @@ def test_match_full(client):
 
 def test_delete_rules(client):
     # Organizer creates
-    payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Casa de Campo", "max_players": 5}
-    m = client.post("/matches", json=payload, headers=headers("org1", "Alice", "Org")).json()
+    payload = {
+        "date": "2025-10-04",
+        "time": "18:00:00",
+        "location": "Casa de Campo",
+        "max_players": 5,
+    }
+    m = client.post(
+        "/matches", json=payload, headers=headers("org1", "Alice", "Org")
+    ).json()
     mid = m["id"]
 
     # Non-organizer cannot delete
@@ -115,12 +142,12 @@ def test_match_not_found(client):
     r = client.put("/matches/999/join", headers=headers("u1"))
     assert r.status_code == 404
     assert r.json()["detail"] == "Match not found"
-    
+
     # Try to leave non-existent match
     r = client.put("/matches/999/leave", headers=headers("u1"))
     assert r.status_code == 404
     assert r.json()["detail"] == "Match not found"
-    
+
     # Try to delete non-existent match
     r = client.delete("/matches/999", headers=headers("u1"))
     assert r.status_code == 404

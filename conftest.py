@@ -36,12 +36,13 @@ def session(engine):
 @pytest.fixture
 def client(session):
     """Create a test client with database dependency override"""
+
     def override_get_session():
         try:
             yield session
         finally:
             session.rollback()
-    
+
     app.dependency_overrides[get_session] = override_get_session
     with TestClient(app) as c:
         yield c
