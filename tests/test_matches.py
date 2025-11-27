@@ -6,43 +6,10 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from db import get_session
 import models  
+from conftest import headers
 
 
-@pytest.fixture
-def engine():
-    # Use shared in-memory SQLite so all connections see the same DB
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
-    return engine
-
-@pytest.fixture
-def session(engine):
-    with Session(engine) as s:
-        yield s
-
-@pytest.fixture
-def client(session):
-    def override_get_session():
-        try:
-            yield session
-        finally:
-            session.rollback()
-    app.dependency_overrides[get_session] = override_get_session
-    with TestClient(app) as c:
-        yield c
-    app.dependency_overrides.clear()
-
-
-def headers(uid="u1", first="John", last="Doe"):
-    return {
-        "X-User-Id": uid,
-        "X-First-Name": first,
-        "X-Last-Name": last,
-    }
+# Fixtures are now in conftest.py - removed duplicate fixtures
 
 
 def test_list_empty(client):
@@ -68,13 +35,12 @@ def test_create_and_list(client):
 
 def test_missing_identity_headers(client):
     payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Retiro", "max_players": 10}
-    r = client.post("/matches", json=payload)  # no headers
+    r = client.post("/matches", json=payload) 
     assert r.status_code == 401
     assert r.json()["detail"] == "Missing user identity headers"
 
 
 def test_join_leave_flow(client):
-    # Create match
     payload = {"date": "2025-10-04", "time": "18:00:00", "location": "Retiro", "max_players": 3}
     m = client.post("/matches", json=payload, headers=headers("org1")).json()
     mid = m["id"]
@@ -134,3 +100,28 @@ def test_delete_rules(client):
     # Confirm delete
     r = client.get("/matches")
     assert all(x["id"] != mid for x in r.json())
+
+
+def test_health(client):
+    """Test the health endpoint"""
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
+
+def test_match_not_found(client):
+    """Test operations on non-existent match"""
+    # Try to join non-existent match
+    r = client.put("/matches/999/join", headers=headers("u1"))
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Match not found"
+    
+    # Try to leave non-existent match
+    r = client.put("/matches/999/leave", headers=headers("u1"))
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Match not found"
+    
+    # Try to delete non-existent match
+    r = client.delete("/matches/999", headers=headers("u1"))
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Match not found"
