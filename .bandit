@@ -1,0 +1,16 @@
+[bandit]
+# Directories to exclude from scanning
+exclude_dirs = ['.venv', '__pycache__', '.git', '.pytest_cache', 'htmlcov', 'build', 'dist', 'node_modules']
+
+# Test IDs to skip (common false positives for this project type)
+skips = [
+    'B101',  # Skip assert_used - asserts are fine in tests
+    'B601',  # Skip shell injection in subprocess - we don't use subprocess
+    'B311',  # Skip random module - not using for security purposes
+]
+
+# Only report medium and high severity issues
+severity = 'medium'
+
+# Confidence level threshold
+confidence = 'medium'
